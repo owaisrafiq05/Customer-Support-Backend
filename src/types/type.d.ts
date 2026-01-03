@@ -9,6 +9,7 @@ export interface IUser extends Document {
   avatar?: string;
   hasNotifications: boolean;
   isEmailVerified: boolean;
+  role: "customer" | "admin" | "team";
   comparePassword(candidatePassword: string): Promise<boolean>;
   generateAccessToken(): Promise<string>;
 }

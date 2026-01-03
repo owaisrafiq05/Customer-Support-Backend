@@ -5,6 +5,12 @@ import jwt from "jsonwebtoken";
 import { IUser } from "../types/type";
 import mongoosePaginate from "mongoose-paginate-v2";
 
+export enum UserRole {
+  CUSTOMER = "customer",
+  ADMIN = "admin",
+  TEAM = "team",
+}
+
 const UserSchema = new Schema<IUser>(
   {
     email: {
@@ -39,6 +45,11 @@ const UserSchema = new Schema<IUser>(
     isEmailVerified: {
       type: Boolean,
       default: false,
+    },
+    role: {
+      type: String,
+      enum: Object.values(UserRole),
+      default: UserRole.CUSTOMER,
     },
   },
   {
