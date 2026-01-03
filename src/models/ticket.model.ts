@@ -29,8 +29,8 @@ const TicketSchema = new Schema<ITicket>(
   {
     ticketNumber: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true,
     },
     title: {
       type: String,

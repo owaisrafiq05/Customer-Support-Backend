@@ -110,6 +110,52 @@ export const getTicket = async (
   }
 };
 
+// Update ticket (customer/staff)
+export const updateTicket = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+    const { ticketId } = req.params;
+    const { title, description, category, attachments } = req.body;
+
+    const ticket = await Ticket.findById(ticketId);
+    if (!ticket) return next(throwError("Ticket not found", 404));
+
+    // Check permissions: customer can only update own open tickets, staff can update any
+    const isOwner = ticket.customer.toString() === req.user?._id?.toString();
+    const isStaff = ["admin", "team"].includes(req.user?.role || "");
+
+    if (!isOwner && !isStaff) {
+      return next(throwError("Access denied", 403));
+    }
+
+    // Customers can only update if ticket is not closed
+    if (isOwner && ticket.status === TicketStatus.CLOSED) {
+      return next(throwError("Cannot update closed tickets", 403));
+    }
+
+    const updateData: Record<string, any> = {};
+    if (title) updateData.title = title;
+    if (description) updateData.description = description;
+    if (category) updateData.category = category;
+    if (attachments) updateData.attachments = attachments;
+
+    const updatedTicket = await Ticket.findByIdAndUpdate(ticketId, updateData, { new: true })
+      .populate("customer", "name email")
+      .populate("assignedTo", "name email");
+
+    return res.status(200).json({
+      success: true,
+      message: "Ticket updated successfully",
+      data: updatedTicket,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 // Update ticket status (team/admin)
 export const updateTicketStatus = async (
   req: AuthRequest,
@@ -229,6 +275,47 @@ export const getTicketMessages = async (
       success: true,
       message: "Messages retrieved",
       data: messages,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// Delete ticket (customer/admin)
+export const deleteTicket = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+    const { ticketId } = req.params;
+
+    const ticket = await Ticket.findById(ticketId);
+    if (!ticket) return next(throwError("Ticket not found", 404));
+
+    // Check permissions: customer can only delete own tickets, admin can delete any
+    const isOwner = ticket.customer.toString() === req.user?._id?.toString();
+    const isAdmin = req.user?.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return next(throwError("Access denied", 403));
+    }
+
+    // Customers cannot delete closed/resolved tickets
+    if (isOwner && (ticket.status === TicketStatus.CLOSED || ticket.status === TicketStatus.RESOLVED)) {
+      return next(throwError("Cannot delete closed or resolved tickets", 403));
+    }
+
+    // Delete all associated messages first
+    await TicketMessage.deleteMany({ ticket: ticketId });
+
+    // Delete the ticket
+    await Ticket.findByIdAndDelete(ticketId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Ticket deleted successfully",
+      data: { ticketId },
     });
   } catch (error) {
     return next(error);
