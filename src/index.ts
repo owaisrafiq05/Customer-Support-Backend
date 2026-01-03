@@ -10,6 +10,7 @@ import { connectDb } from "./config/dbConnection";
 import authRoute from "./routes/auth.route";
 import usersRoute from "./routes/user.route";
 import dataEntryRoute from "./routes/dataEntry.route";
+import ticketRoute from "./routes/ticket.route";
 
 config();
 
@@ -44,6 +45,7 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/users", usersRoute);
 app.use("/api/v1/data-entries", dataEntryRoute);
+app.use("/api/v1/tickets", ticketRoute);
 
 // Middlewares
 app.use(errorMiddleware);
