@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "npm run build && node dist/index.js",
-    "build": "npx tsc",
-    "dev": "npx tsx watch src/index.ts"
+    "start": "node init && npm run build && node dist/index.js",
+    "build": "node init && npx tsc",
+    "dev": "node init && npx tsx watch src/index.ts"
   },
   "keywords": [],
   "author": "",
